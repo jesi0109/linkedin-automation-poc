@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login / Sign Up - LinkedIn Automation POC</title>
+<style>
+body {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  background:#f3f4f6;
+  font-family:Arial,sans-serif;
+}
+.card {
+  background:#fff;
+  padding:40px;
+  border-radius:12px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.1);
+  width:400px;
+}
+h2 {text-align:center; margin-bottom:20px;}
+input {width:100%;padding:12px;margin-top:10px;border-radius:8px;border:1px solid #ccc;}
+button {width:100%;padding:12px;margin-top:15px;border:none;border-radius:8px;background:#2563eb;color:#fff;font-weight:bold;cursor:pointer;}
+#toggleForm {background:#10b981;}
+#authLog {margin-top:10px;background:#111;color:#0f0;padding:10px;height:120px;overflow-y:auto;border-radius:8px;font-size:12px;}
+.link {color:#2563eb; cursor:pointer; font-size:14px; display:block; text-align:center; margin-top:10px;}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <!-- Login Form -->
+  <div id="loginForm">
+    <h2>Login</h2>
+    <input type="email" id="loginEmail" placeholder="Email">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <span class="link" onclick="toggleForms()">Don't have an account? Sign Up</span>
+    <div id="authLog"></div>
+  </div>
+
+  <!-- Sign Up Form -->
+  <div id="signupForm" style="display:none;">
+    <h2>Sign Up</h2>
+    <input type="text" id="signupName" placeholder="Full Name">
+    <input type="email" id="signupEmail" placeholder="Email">
+    <input type="password" id="signupPassword" placeholder="Password">
+    <input type="password" id="signupConfirm" placeholder="Confirm Password">
+    <button onclick="signup()">Sign Up</button>
+    <span class="link" onclick="toggleForms()">Already have an account? Login</span>
+    <div id="signupLog"></div>
+  </div>
+</div>
+
+<script>
+function toggleForms(){
+  const login=document.getElementById("loginForm");
+  const signup=document.getElementById("signupForm");
+  login.style.display = login.style.display === "none" ? "block" : "none";
+  signup.style.display = signup.style.display === "none" ? "block" : "none";
+}
+
+/* Login Simulation */
+function login(){
+  const email=document.getElementById("loginEmail").value;
+  const password=document.getElementById("loginPassword").value;
+  const log=document.getElementById("authLog");
+  log.innerHTML="";
+
+  if(!email || !password){ log.innerHTML="[ERROR] Email or password missing"; return; }
+
+  log.innerHTML="[INFO] Login successful! Redirecting...";
+  setTimeout(()=>{
+    // Redirect to testpage.html
+    window.location.href = "mock/testpage.html";
+  },1000);
+}
+
+/* Sign Up Simulation */
+function signup(){
+  const name=document.getElementById("signupName").value;
+  const email=document.getElementById("signupEmail").value;
+  const password=document.getElementById("signupPassword").value;
+  const confirm=document.getElementById("signupConfirm").value;
+  const log=document.getElementById("signupLog");
+  log.innerHTML="";
+
+  if(!name || !email || !password || !confirm){ log.innerHTML="[ERROR] All fields are required"; return; }
+  if(password!==confirm){ log.innerHTML="[WARN] Passwords do not match"; return; }
+
+  log.innerHTML="[INFO] Registration successful! You can now login.";
+  setTimeout(()=>{ toggleForms(); },1000);
+}
+</script>
+
+</body>
+</html>

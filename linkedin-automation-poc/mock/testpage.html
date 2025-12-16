@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LinkedIn Automation POC</title>
+<style>
+:root{
+  --primary:#2563eb;
+  --dark:#111827;
+  --bg:#f3f4f6;
+  --card:#ffffff;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}
+body{display:flex;height:100vh;background:var(--bg);}
+
+/* SIDEBAR */
+.sidebar{width:240px;background:var(--dark);color:#fff;padding:20px;}
+.sidebar h2{margin-bottom:20px;}
+.nav-item{padding:12px;margin-bottom:8px;border-radius:8px;cursor:pointer;}
+.nav-item:hover{background:#1f2937;}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;}
+
+/* HEADER */
+header{background:var(--card);padding:15px 20px;display:flex;justify-content:space-between;border-bottom:1px solid #ddd;}
+.status{color:green;font-weight:bold;}
+
+/* PAGES */
+.page{display:none;padding:25px;}
+.page.active{display:block;}
+
+/* DASHBOARD */
+.dashboard{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:25px;
+  margin-top:20px;
+}
+.card{
+  padding:20px;
+  border-radius:20px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.card:hover{
+  transform: translateY(-10px);
+  box-shadow:0 15px 30px rgba(0,0,0,0.2);
+}
+.card h3{
+  font-size:18px;
+  font-weight:600;
+  margin-bottom:5px;
+}
+.card p{
+  font-size:26px;
+  font-weight:700;
+}
+
+/* INPUT */
+input,select{width:100%;padding:10px;margin-top:10px;border-radius:8px;border:1px solid #ccc;}
+button{margin-top:15px;padding:10px 18px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-weight:bold;cursor:pointer;}
+
+/* PROFILE */
+.profile{background:#fff;padding:15px;margin-top:10px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;}
+.profile button{background:#16a34a;}
+
+/* CONNECTIONS */
+.connection{background:#f9fafb;padding:15px;margin-top:10px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;}
+.connection span{font-size:14px;color:#6b7280;}
+.accepted{color:green;font-weight:bold;}
+.pending{color:orange;font-weight:bold;}
+
+/* LOGS */
+.log-box{margin-top:15px;background:#000;color:#0f0;height:220px;overflow-y:auto;padding:10px;font-size:12px;}
+ul li{margin-bottom:6px;}
+
+/* MESSAGING */
+.chat-container{display:flex;gap:20px;margin-top:20px;height:75vh;}
+.chat-list{width:260px;background:#fff;border-radius:12px;padding:15px;box-shadow:0 4px 10px rgba(0,0,0,0.05);}
+.chat-user{padding:12px;border-radius:10px;margin-bottom:10px;cursor:pointer;}
+.chat-user span{display:block;font-size:12px;color:#6b7280;}
+.chat-user:hover,.chat-user.active{background:#e0e7ff;}
+.chat-window{flex:1;background:#fff;border-radius:12px;display:flex;flex-direction:column;box-shadow:0 4px 10px rgba(0,0,0,0.05);}
+.chat-header{padding:15px;border-bottom:1px solid #ddd;display:flex;justify-content:space-between;align-items:center;}
+.online{color:green;font-size:12px;}
+.chat-messages{flex:1;padding:20px;overflow-y:auto;background:#f9fafb;}
+.bot-msg{background:#e0e7ff;padding:10px 15px;border-radius:15px;margin-bottom:10px;width:fit-content;}
+.user-msg{background:#2563eb;color:#fff;padding:10px 15px;border-radius:15px;margin-left:auto;margin-bottom:10px;width:fit-content;}
+.chat-input{display:flex;gap:10px;padding:15px;border-top:1px solid #ddd;}
+.chat-input input{flex:1;padding:10px;border-radius:8px;border:1px solid #ccc;}
+.chat-input button{background:#16a34a;}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <h2>Automation</h2>
+  <div class="nav-item" onclick="showPage('dashboard')">Dashboard</div>
+  <div class="nav-item" onclick="showPage('search')">Search & Targeting</div>
+  <div class="nav-item" onclick="showPage('connections')">Connections</div>
+  <div class="nav-item" onclick="showPage('messaging')">Messaging</div>
+  <div class="nav-item" onclick="showPage('logs')">Logs & Reports</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+<header>
+  <h3>LinkedIn Automation POC</h3>
+  <span class="status">● Running</span>
+</header>
+
+<!-- DASHBOARD -->
+<section class="page active" id="dashboard">
+  <div class="dashboard">
+    <div class="card" style="background: linear-gradient(135deg, #4f46e5, #2563eb); color:white;">
+      <div style="display:flex; align-items:center; gap:15px;">
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/search--v1.png" width="40" alt="Profiles Scanned">
+        <div>
+          <h3>Profiles Scanned</h3>
+          <p id="profiles">0</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="background: linear-gradient(135deg, #10b981, #047857); color:white;">
+      <div style="display:flex; align-items:center; gap:15px;">
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/add-user-group-man-man.png" width="40" alt="Connections Sent">
+        <div>
+          <h3>Connections Sent</h3>
+          <p id="connectionsCount">0</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="background: linear-gradient(135deg, #facc15, #ca8a04); color:white;">
+      <div style="display:flex; align-items:center; gap:15px;">
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/speech-bubble.png" width="40" alt="Messages Sent">
+        <div>
+          <h3>Messages Sent</h3>
+          <p id="messages">0</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="background: linear-gradient(135deg, #ec4899, #be185d); color:white;">
+      <div style="display:flex; align-items:center; gap:15px;">
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/calendar.png" width="40" alt="Daily Limit">
+        <div>
+          <h3>Daily Limit</h3>
+          <p>20</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SEARCH -->
+<section class="page" id="search">
+  <h2>Search & Targeting</h2>
+  <div class="card" style="max-width:700px">
+    <input id="job" placeholder="Job Title">
+    <input id="location" placeholder="Location">
+    <input id="company" placeholder="Company">
+    <input id="keyword" placeholder="Keyword">
+    <button onclick="startSearch()">Start Search</button>
+    <p id="searchResult"></p>
+  </div>
+  <div id="results"></div>
+</section>
+
+<!-- CONNECTIONS -->
+<section class="page" id="connections">
+  <h2>Connections</h2>
+  <div class="card" style="max-width:900px">
+    <p><strong>Daily Limit:</strong> <span id="dailyLimit">20</span> |
+       <strong>Used:</strong> <span id="usedLimit">0</span></p>
+    <div id="connectionList"></div>
+  </div>
+</section>
+
+<!-- MESSAGING -->
+<section class="page" id="messaging">
+  <h2>Messaging Center</h2>
+  <div class="chat-container">
+    <div class="chat-list">
+      <h3>Conversations</h3>
+      <div class="chat-user active" onclick="openChat('Arjun Kumar',event)">
+        <strong>Arjun Kumar</strong><span>Connected</span>
+      </div>
+      <div class="chat-user" onclick="openChat('Priya Sharma',event)">
+        <strong>Priya Sharma</strong><span>Replied</span>
+      </div>
+      <div class="chat-user" onclick="openChat('Rahul Verma',event)">
+        <strong>Rahul Verma</strong><span>Pending</span>
+      </div>
+    </div>
+    <div class="chat-window">
+      <div class="chat-header">
+        <h3 id="chatName">Select a Conversation</h3>
+        <span class="online">● Online</span>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="bot-msg">Hello 👋, type a message to get a response.</div>
+      </div>
+      <div class="chat-input">
+        <input id="messageText" placeholder="Type your message here...">
+        <button onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LOGS -->
+<section class="page" id="logs">
+  <h2>Activity Logs</h2>
+  <div class="log-box" id="logBox"></div>
+</section>
+
+</div>
+
+<script>
+/* PAGE NAVIGATION */
+function showPage(id){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+/* GLOBAL LOG */
+function log(type,msg){
+  const box=document.getElementById("logBox");
+  box.innerHTML+=`[${new Date().toLocaleTimeString()}] ${type.toUpperCase()}: ${msg}<br>`;
+  box.scrollTop=box.scrollHeight;
+}
+
+/* SEARCH */
+function startSearch(){
+  const job=document.getElementById("job").value;
+  const location=document.getElementById("location").value;
+  if(!job||!location){alert("Job & Location required");return;}
+  searchResult.innerText=`Results for ${job} in ${location}`;
+  results.innerHTML="";
+  const profiles=[
+    "Arjun Kumar","Priya Sharma","Rahul Verma","Sneha Iyer","Ankit Jain","Pooja Gupta",
+    "Ravi Singh","Meera Nair","Vikram Patel","Anjali Sharma","Karan Mehta","Divya Reddy",
+    "Siddharth Joshi","Neha Kapoor","Amitabh Roy","Ritu Verma","Deepak Kumar","Shreya Das",
+    "Nitin Chauhan","Pallavi Saxena","Raghav Sharma","Simran Kaur","Aditya Singh","Tanya Agarwal",
+    "Mohit Sharma","Rhea Kapoor","Rohit Mehra","Isha Malhotra","Arnav Gupta","Prisha Jain",
+    "Kunal Verma","Sanya Mehta","Varun Nair","Ananya Reddy","Manish Singh","Shruti Kapoor",
+    "Rajesh Sharma","Kavita Joshi","Tanmay Mehta","Ritika Verma","Arjun Malhotra","Priya Nair"
+  ];
+  profiles.forEach(name=>{
+    const div=document.createElement("div");
+    div.className="profile";
+    div.innerHTML=`<div><strong>${name}</strong><br>${job} - ${location}</div>
+      <button onclick="sendConnection('${name}')">Connect</button>`;
+    results.appendChild(div);
+  });
+  document.getElementById("profiles").innerText=parseInt(document.getElementById("profiles").innerText)+profiles.length;
+  log("info","Profiles displayed");
+}
+
+/* CONNECTIONS */
+function sendConnection(name){
+  const used=document.getElementById("usedLimit");
+  if(parseInt(used.innerText)>=20){alert("Daily limit reached");return;}
+  used.innerText=parseInt(used.innerText)+1;
+
+  const div=document.createElement("div");
+  div.className="connection";
+  div.innerHTML=`<div><strong>${name}</strong><br>
+    <span>Status: <span class="pending">Pending</span></span></div>
+    <div>
+      <button onclick="acceptConnection(this,'${name}')">Accept</button>
+      <button style="background:#dc2626" onclick="cancelConnection(this,'${name}')">Cancel</button>
+    </div>`;
+  connectionList.appendChild(div);
+  document.getElementById("connectionsCount").innerText=parseInt(document.getElementById("connectionsCount").innerText)+1;
+  log("info",`Connection request sent to ${name}`);
+}
+
+function acceptConnection(btn,name){
+  btn.closest(".connection").querySelector(".pending").innerHTML=
+    `<span class="accepted">Accepted</span>`;
+  log("info",`Connection accepted by ${name}`);
+}
+
+function cancelConnection(btn,name){
+  btn.closest(".connection").remove();
+  log("warn",`Connection cancelled for ${name}`);
+}
+
+/* MESSAGING */
+let currentUser="";
+function openChat(name,event){
+  currentUser=name;
+  document.getElementById("chatName").innerText=name;
+  document.querySelectorAll(".chat-user").forEach(u=>u.classList.remove("active"));
+  event.currentTarget.classList.add("active");
+  document.getElementById("chatMessages").innerHTML=
+    `<div class="bot-msg">Hi ${name}, thanks for connecting! 👋</div>`;
+}
+
+function sendMessage(){
+  const msg=document.getElementById("messageText").value;
+  if(!msg){alert("Type a message!"); return;}
+
+  const userDiv=document.createElement("div");
+  userDiv.className="user-msg";
+  userDiv.innerText=msg;
+  document.getElementById("chatMessages").appendChild(userDiv);
+  document.getElementById("messageText").value="";
+  document.getElementById("chatMessages").scrollTop=document.getElementById("chatMessages").scrollHeight;
+
+  // Bot response
+  setTimeout(()=>{
+    const botDiv=document.createElement("div");
+    botDiv.className="bot-msg";
+    botDiv.innerText=generateBotResponse(msg);
+    document.getElementById("chatMessages").appendChild(botDiv);
+    document.getElementById("chatMessages").scrollTop=document.getElementById("chatMessages").scrollHeight;
+    document.getElementById("messages").innerText=parseInt(document.getElementById("messages").innerText)+1;
+  }, 1000);
+}
+
+function generateBotResponse(userMsg){
+  const msg=userMsg.toLowerCase();
+  if(msg.includes("hi")||msg.includes("hello")) return "Hello! How can I help you today?";
+  if(msg.includes("thanks")||msg.includes("thank you")) return "You're welcome! 😊";
+  if(msg.includes("how are you")) return "I'm just a bot, but I'm doing well!";
+  if(msg.includes("linkedin")) return "LinkedIn automation helps you manage connections and messages.";
+  return "Interesting! Can you tell me more?";
+}
+</script>
+</body>
+</html>
